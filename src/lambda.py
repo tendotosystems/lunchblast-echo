@@ -16,7 +16,11 @@ def get_destination():
 
     response = requests.get('https://calm-sands-26146.herokuapp.com/api/v1/destination', headers=headers)
 
-    return response.json()
+    destination = response.json()
+
+    card_title = "Hello"
+    greeting_string = "Hello! This is Guy Fieri and we are going to eat at %s in flavor town." % destination['name']
+    return build_response({}, build_speechlet_response(card_title, greeting_string, "Ask me to say hello...", True))
 
 def build_speechlet_response(title, output, reprompt_text, should_end_session):
     """
@@ -115,8 +119,7 @@ def on_intent(intent_request, session):
     # Dispatch to your skill's intent handlers
 
     if intent_name == "lunch":
-        destination = get_destination()
-        return destination.name
+        return get_destination()
     elif intent_name == "AMAZON.HelpIntent":
         return get_welcome_response()
     elif intent_name == "AMAZON.CancelIntent" or intent_name == "AMAZON.StopIntent":
