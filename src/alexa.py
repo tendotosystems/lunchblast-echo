@@ -1,15 +1,26 @@
 # This attempts to be (more or less) the simplest possible hello world Alexa skill...
 from __future__ import print_function
 import random
+import requests
 
 # We'll start with a couple of globals...
 CardTitlePrefix = "Greeting"
 
 # --------------- Helpers that build all of the responses ----------------------
 
+def get_destination():
+    headers = {
+        'Authorization': 'Bearer: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOjEsImVtYWlsIjoiZ3Vlc3RAYmxhc3RhcHAuaW8ifQ.N4QVBH42-67xKY0sBDqahL9copEiutE1HFm6mAebm5k',
+        'Content-Type': 'application/json'
+    }
+
+    response = requests.get('https://calm-sands-26146.herokuapp.com/api/v1/destination', headers=headers)
+
+    return response.json()
+
 def build_speechlet_response(title, output, reprompt_text, should_end_session):
     """
-    Build a speechlet JSON representation of the title, output text, 
+    Build a speechlet JSON representation of the title, output text,
     reprompt text & end of session
     """
     return {
@@ -78,7 +89,7 @@ def say_hello_dinner():
     two = random.choice(['krog street market', 'bell street burritos', 'victory','superica', 'ponce city market', 'Daddy D'])
     greeting_string = "Hello! This is Guy Fieri and we are going to eat at %s in flavor town." % two
     return build_response({}, build_speechlet_response(card_title, greeting_string, "Ask me to say hello...", True))
-    
+
 
 
 # --------------- Events ------------------
@@ -102,11 +113,10 @@ def on_intent(intent_request, session):
     intent = intent_request['intent']
     intent_name = intent_request['intent']['name']
     # Dispatch to your skill's intent handlers
-    
+
     if intent_name == "lunch":
-        return say_hello()
-    elif intent_name == "dinner":
-        return say_hello_dinner()
+        destination = get_destination()
+        return destination.name
     elif intent_name == "AMAZON.HelpIntent":
         return get_welcome_response()
     elif intent_name == "AMAZON.CancelIntent" or intent_name == "AMAZON.StopIntent":
@@ -130,12 +140,12 @@ def lambda_handler(event, context):
     if event['session']['new']:
         on_session_started({'requestId': event['request']['requestId']},
                            event['session'])
-                           
+
     if event['request']['type'] == "LaunchRequest":
         return on_launch(event['request'], event['session'])
-        
+
     elif event['request']['type'] == "IntentRequest":
         return on_intent(event['request'], event['session'])
-        
+
     elif event['request']['type'] == "SessionEndedRequest":
         return on_session_ended(event['request'], event['session'])
